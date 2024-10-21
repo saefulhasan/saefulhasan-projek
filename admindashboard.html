@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin E-Commerce</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dashboard Admin E-Commerce</h1>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#">SAEFUL HASAN SHOP</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <div class="stats">
+                <div class="stat-box">
+                    <h2>Jumlah Produk</h2>
+                    <p id="productCount">4</p>
+                </div>
+                <div class="stat-box">
+                    <h2>Jumlah Komentar</h2>
+                    <p id="commentCount">5</p>
+                </div>
+                <div class="stat-box">
+                    <h2>Pengunjung Bulan Ini</h2>
+                    <p>3000</p>
+                </div>
+                <div class="stat-box">
+                    <h2>Pendapatan Bulan Ini</h2>
+                    <p>Rp 30.000.000</p>
+                </div>
+            </div>
+
+            <h2>Diagram Penjualan 30 Hari Terakhir</h2>
+            <div class="charts">
+                <canvas id="salesChart" width="400" height="200"></canvas>
+            </div>
+
+            <h2>Tambah Produk Baru</h2>
+            <div class="add-product-form" id="addProductForm">
+                <input type="text" id="productName" placeholder="Nama Produk" required>
+                <input type="number" id="productPrice" placeholder="Harga Produk" required>
+                <input type="file" id="productImage" accept="image/*" required>
+                <img id="productImagePreview" alt="Preview Gambar" style="display:none; max-width: 100%; margin-top: 10px;">
+                <button id="saveProductButton">Simpan Produk</button>
+            </div>
+            
+            <h2>Daftar Produk</h2>
+            <div class="product-list" id="productList"></div>
+        </main>
+
+        <footer>
+            <p>© 2024 Saeful hasan</p>
+        </footer>
+    </div>
+
+    <script>
+        const productList = document.getElementById('productList');
+        const addProductForm = document.getElementById('addProductForm');
+        const productCount = document.getElementById('productCount');
+        const commentCount = document.getElementById('commentCount');
+
+        let products = [
+            {
+                name: "Sneakers",
+                price: "100.000.000",
+                image: "images/sneakers.jpg",
+                comments: [                 
+                    { name: "Budi", text: "Harganya sangat terjangkau untuk kualitas yang ditawarkan." },
+                    { name: "Rina", text: "Produk ini sangat bagus!" }
+                ]
+            },
+            {
+                name: "Kacamata hitam",
+                price: "15.000.000",
+                image: "images/kacamata.jpg",
+                comments: [
+                    { name: "Joko", text: "Pengiriman cepat, sangat puas!" },
+                    { name: "Lay", text: "Produk ini sangat bagus!" }
+                ]
+            },
+            {
+                name: "Jaket",
+                price: "40.000.000",
+                image: "images/jaket.jpg",
+                comments: [
+                    { name: "Lisa", text: "Sangat suka dengan produk ini, kualitas luar biasa!" },
+                    { name: "Pengki", text: "Produk ini sangat bagus!" }
+                ]
+            },
+            {
+                name: "Kaos",
+                price: "20.000.000",
+                image: "images/baju.jpg",
+                comments: [
+                    { name: "Komeng", text: "Harganya sangat terjangkau untuk kualitas yang ditawarkan." },
+                    { name: "Kuple", text: "Produk ini sangat bagus!" }
+                ]
+            }
+        ];
+
+        // Data penjualan untuk 30 hari terakhir
+        const salesData = Array.from({ length: 30 }, () => Math.floor(Math.random() * 1000) + 100); // Contoh data acak
+        const salesLabels = Array.from({ length: 30 }, (_, i) => `Hari ${i + 1}`);
+
+        // Inisialisasi diagram penjualan
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: salesLabels,
+                datasets: [{
+                    label: 'Pendapatan Harian',
+                    data: salesData,
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Pendapatan'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Hari'
+                        }
+                    }
+                }
+            }
+        });
+
+        function renderProducts() {
+            productList.innerHTML = '';
+            products.forEach((product, index) => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.setAttribute('data-index', index);
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>Harga: ${product.price}</p>
+                    <button class="editProduct">Edit</button>
+                    <button class="deleteProduct">Hapus</button>
+                    <div class="comments-section">
+                        <h4>Komentar Pelanggan</h4>
+                        <div class="comments-list">
+                            ${product.comments.map((comment, commentIndex) => `
+                                <div class="comment">
+                                    <p><strong>${comment.name}:</strong> ${comment.text}</p>
+                                    <button class="deleteComment" data-product-index="${index}" data-comment-index="${commentIndex}">Hapus</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <form class="commentForm">
+                            <input type="text" class="customerName" placeholder="Nama Anda" required>
+                            <textarea class="customerComment" placeholder="Tulis komentar..." required></textarea>
+                            <button type="submit">Kirim Komentar</button>
+                        </form>
+                    </div>
+                `;
+                productList.appendChild(productCard);
+            });
+            productCount.innerText = products.length;
+            commentCount.innerText = products.reduce((total, product) => total + product.comments.length, 0);
+        }
+
+        addProductForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newProduct = {
+                name: document.getElementById('productName').value,
+                price: document.getElementById('productPrice').value,
+                image: document.getElementById('productImage').value,
+                comments: []
+            };
+            products.push(newProduct);
+            addProductForm.reset();
+            renderProducts();
+        });
+
+        productList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('deleteProduct')) {
+                const index = e.target.closest('.product-card').getAttribute('data-index');
+                products.splice(index, 1);
+                renderProducts();
+            } else if (e.target.classList.contains('editProduct')) {
+                const index = e.target.closest('.product-card').getAttribute('data-index');
+                const product = products[index];
+                const name = prompt("Edit Nama Produk:", product.name);
+                const price = prompt("Edit Harga Produk:", product.price);
+                const image = prompt("Edit URL Gambar Produk:", product.image);
+                if (name && price && image) {
+                    products[index] = { ...product, name, price, image };
+                    renderProducts();
+                }
+            } else if (e.target.classList.contains('deleteComment')) {
+                const productIndex = e.target.getAttribute('data-product-index');
+                const commentIndex = e.target.getAttribute('data-comment-index');
+                products[productIndex].comments.splice(commentIndex, 1);
+                renderProducts();
+            }
+        });
+
+        productList.addEventListener('submit', (e) => {
+            if (e.target.classList.contains('commentForm')) {
+                e.preventDefault();
+                const productIndex = e.target.closest('.product-card').getAttribute('data-index');
+                const customerName = e.target.querySelector('.customerName').value;
+                const customerComment = e.target.querySelector('.customerComment').value;
+
+                products[productIndex].comments.push({ name: customerName, text: customerComment });
+                e.target.reset();
+                renderProducts();
+            }
+        });
+
+        renderProducts(); // Initial render
+
+    </script>
+    <script src="js/script.js"></script>
+</body>
+</html>
